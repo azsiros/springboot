@@ -9,7 +9,9 @@
 		http://www.springframework.org/schema/integration/file http://www.springframework.org/schema/integration/file/spring-integration-file.xsd
 		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd">
 
-    <feed:inbound-channel-adapter id="news" url="https://spring.io/blog.atom">
+    <feed:inbound-channel-adapter 
+    	id="news" url="https://spring.io/blog.atom"
+    	feed-fetcher="pwdFetcher">
         <int:poller fixed-rate="1000"/>
     </feed:inbound-channel-adapter>
 
@@ -23,5 +25,12 @@
             charset="UTF-8"
             directory="ahoj"
             filename-generator-expression="'SpringBlog'"/>
+            
+    <bean id="pwdFetcher" class="com.rometools.fetcher.impl.HttpClientFeedFetcher">
+    	<property name="credentialSupplier" ref="gtiCredentialSupplier">
+    	</property>
+    </bean>
+    
+    <bean id="gtiCredentialSupplier" class="com.gratex.rssreader.blog.GtiCreadentialSupplier" />
 
 </beans>
