@@ -2,11 +2,11 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:int="http://www.springframework.org/schema/integration"
-	xmlns:file="http://www.springframework.org/schema/integration/file"
 	xmlns:feed="http://www.springframework.org/schema/integration/feed"
+	xmlns:int-stream="http://www.springframework.org/schema/integration/stream"
 	xsi:schemaLocation="http://www.springframework.org/schema/integration/feed http://www.springframework.org/schema/integration/feed/spring-integration-feed.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-		http://www.springframework.org/schema/integration/file http://www.springframework.org/schema/integration/file/spring-integration-file.xsd
+		http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream.xsd
 		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd">
 
     <feed:inbound-channel-adapter 
@@ -20,34 +20,26 @@
     
     <int:filter
     	input-channel="news"
-		ref="commitSelector"
+		expression="payload.publishedDate.compareTo(@currentDate) > 0"
     	output-channel="inboundToTransf">
     </int:filter>
     
      <int:channel id="inboundToTransf" />
 
     <int:transformer
-    		id="formatter"
             input-channel="inboundToTransf"
-            expression="payload.author + ' @ ' + payload.publishedDate.class + ' @ ' + payload.titleEx + ' @ ' + payload.link + '#{systemProperties['line.separator']}'"
-            output-channel="file"/>
-
-    <file:outbound-channel-adapter id="file"
-            mode="APPEND"
-            charset="UTF-8"
-            directory="ahoj"
-            filename-generator-expression="'SpringBlog'"/>
+            expression="@currentDate + ' @ ' + payload.publishedDate.compareTo(@currentDate) + ' @ ' + payload.author + ' @ ' + payload.publishedDate.time + ' @ ' + payload.titleEx.value + ' @ ' + payload.link + '#{systemProperties['line.separator']}'"
+            output-channel="stdout"/>
             
+    <int-stream:stdout-channel-adapter id="stdout" append-newline="false"/>
     <bean id="pwdFetcher" class="com.rometools.fetcher.impl.HttpClientFeedFetcher">
     	<property name="credentialSupplier" ref="gtiCredentialSupplier">
     	</property>
     </bean>
     
   
-    <bean id="currentDate" class="java.util.Date"/>
-    <bean id="gtiCredentialSupplier" class="com.gratex.rssreader.blog.GtiCreadentialSupplier" />
-    <bean id="commitSelector" class="com.gratex.rssreader.blog.CommitSelector">
-    	 <constructor-arg ref="currentDate"/>
+    <bean id="currentDate" class="java.util.Date">
+    	<constructor-arg type="long" value="1444655871000"/>
     </bean>
-    
+    <bean id="gtiCredentialSupplier" class="com.gratex.rssreader.blog.GtiCreadentialSupplier" />    
 </beans>
