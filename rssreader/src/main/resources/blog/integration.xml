@@ -10,14 +10,26 @@
 		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd">
 
     <feed:inbound-channel-adapter 
-    	id="news" url="https://spring.io/blog.atom"
+    	id="news" url="https://gitsrv01.hq.gratex.com/git/?p=UniusNg;a=atom;h=refs/heads/release"
     	feed-fetcher="pwdFetcher">
         <int:poller fixed-rate="1000"/>
     </feed:inbound-channel-adapter>
+    
+    
+    <!--     	expression="payload.publishedDate.compareTo(#{currentDate})" -->
+    
+    <int:filter
+    	input-channel="news"
+		ref="commitSelector"
+    	output-channel="inboundToTransf">
+    </int:filter>
+    
+     <int:channel id="inboundToTransf" />
 
     <int:transformer
-            input-channel="news"
-            expression="payload.title + ' @ ' + payload.link + '#{systemProperties['line.separator']}'"
+    		id="formatter"
+            input-channel="inboundToTransf"
+            expression="payload.author + ' @ ' + payload.publishedDate.class + ' @ ' + payload.titleEx + ' @ ' + payload.link + '#{systemProperties['line.separator']}'"
             output-channel="file"/>
 
     <file:outbound-channel-adapter id="file"
@@ -31,6 +43,11 @@
     	</property>
     </bean>
     
+  
+    <bean id="currentDate" class="java.util.Date"/>
     <bean id="gtiCredentialSupplier" class="com.gratex.rssreader.blog.GtiCreadentialSupplier" />
-
+    <bean id="commitSelector" class="com.gratex.rssreader.blog.CommitSelector">
+    	 <constructor-arg ref="currentDate"/>
+    </bean>
+    
 </beans>

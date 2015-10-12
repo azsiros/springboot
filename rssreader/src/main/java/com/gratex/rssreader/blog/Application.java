@@ -5,7 +5,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 public class Application {
     public static void main(String[] args) throws Exception {
-    	System.setProperty("javax.net.debug", "ssl");
+    	//System.setProperty("javax.net.debug", "ssl");
     	System.setProperty("javax.net.ssl.keyStore", "mystore");
     	System.setProperty("javax.net.ssl.keyStorePassword", "marcus");
     	System.setProperty("javax.net.ssl.trustStore", "mystore");
