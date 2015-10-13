@@ -3,20 +3,21 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:int="http://www.springframework.org/schema/integration"
 	xmlns:feed="http://www.springframework.org/schema/integration/feed"
+	xmlns:context="http://www.springframework.org/schema/context"
 	xmlns:int-stream="http://www.springframework.org/schema/integration/stream"
 	xsi:schemaLocation="http://www.springframework.org/schema/integration/feed http://www.springframework.org/schema/integration/feed/spring-integration-feed.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 		http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream.xsd
-		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd">
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+		
+	<context:property-placeholder location="classpath:config/application.properties" />
 
     <feed:inbound-channel-adapter 
     	id="news" url="https://gitsrv01.hq.gratex.com/git/?p=UniusNg;a=atom;h=refs/heads/release"
     	feed-fetcher="pwdFetcher">
         <int:poller fixed-rate="1000"/>
     </feed:inbound-channel-adapter>
-    
-    
-    <!--     	expression="payload.publishedDate.compareTo(#{currentDate})" -->
     
     <int:filter
     	input-channel="news"
@@ -38,8 +39,6 @@
     </bean>
     
   
-    <bean id="currentDate" class="java.util.Date">
-    	<constructor-arg type="long" value="1444655871000"/>
-    </bean>
+    <bean id="currentDate" class="java.util.Date" />
     <bean id="gtiCredentialSupplier" class="com.gratex.rssreader.blog.GtiCreadentialSupplier" />    
 </beans>

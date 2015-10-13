@@ -7,8 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import com.rometools.fetcher.impl.HttpClientFeedFetcher.CredentialSupplier;
 
 public class GtiCreadentialSupplier implements CredentialSupplier{
-	
-	
 	@Value("${username}")
 	private String userName;
 	
