@@ -14,25 +14,34 @@
 	<context:property-placeholder location="classpath:config/application.properties" />
 
     <feed:inbound-channel-adapter 
-    	id="news" url="https://gitsrv01.hq.gratex.com/git/?p=UniusNg;a=atom;h=refs/heads/release"
+    	id="news" url="http://spring.io/blog.atom"
     	feed-fetcher="pwdFetcher">
         <int:poller fixed-rate="1000"/>
     </feed:inbound-channel-adapter>
     
+    
     <int:filter
     	input-channel="news"
-		expression="payload.publishedDate.compareTo(@currentDate) > 0"
+		expression="true"
     	output-channel="inboundToTransf">
     </int:filter>
     
-     <int:channel id="inboundToTransf" />
+    <int:publish-subscribe-channel id="inboundToTransf" />
 
     <int:transformer
             input-channel="inboundToTransf"
-            expression="@currentDate + ' @ ' + payload.publishedDate.compareTo(@currentDate) + ' @ ' + payload.author + ' @ ' + payload.publishedDate.time + ' @ ' + payload.titleEx.value + ' @ ' + payload.link + '#{systemProperties['line.separator']}'"
-            output-channel="stdout"/>
+            expression="payload.author + ' @ ' + payload.updatedDate + ' @ ' + payload.titleEx.value + ' @ ' + payload.link + '#{systemProperties['line.separator']}'"
+            output-channel="clonner"/>
             
-    <int-stream:stdout-channel-adapter id="stdout" append-newline="false"/>
+    <int:publish-subscribe-channel id="clonner"/>
+            
+    <int-stream:stdout-channel-adapter id="stdout" append-newline="false" channel="clonner" />
+    
+    <int:service-activator
+    	input-channel="clonner"
+    	ref="monitorRefresher"
+    	method="updateMOnitor"
+    />
     <bean id="pwdFetcher" class="com.rometools.fetcher.impl.HttpClientFeedFetcher">
     	<property name="credentialSupplier" ref="gtiCredentialSupplier">
     	</property>
@@ -41,4 +50,6 @@
   
     <bean id="currentDate" class="java.util.Date" />
     <bean id="gtiCredentialSupplier" class="com.gratex.rssreader.blog.GtiCreadentialSupplier" />    
+    
+    <bean id="monitorRefresher" class="com.gratex.rssreader.blog.monitoring.MonitorRefresher" />
 </beans>
