@@ -14,34 +14,37 @@
 	<context:property-placeholder location="classpath:config/application.properties" />
 
     <feed:inbound-channel-adapter 
-    	id="news" url="http://spring.io/blog.atom"
+    	id="news" url="https://gitsrv01.hq.gratex.com/git/?p=UniusNg;a=atom;h=refs/heads/release"
     	feed-fetcher="pwdFetcher">
-        <int:poller fixed-rate="1000"/>
+        <int:poller fixed-rate="5000"/>
     </feed:inbound-channel-adapter>
     
     
     <int:filter
     	input-channel="news"
 		expression="true"
-    	output-channel="inboundToTransf">
+    	output-channel="validMessageChannel">
     </int:filter>
     
-    <int:publish-subscribe-channel id="inboundToTransf" />
-
-    <int:transformer
-            input-channel="inboundToTransf"
-            expression="payload.author + ' @ ' + payload.updatedDate + ' @ ' + payload.titleEx.value + ' @ ' + payload.link + '#{systemProperties['line.separator']}'"
-            output-channel="clonner"/>
-            
-    <int:publish-subscribe-channel id="clonner"/>
-            
-    <int-stream:stdout-channel-adapter id="stdout" append-newline="false" channel="clonner" />
+    <int:publish-subscribe-channel id="validMessageChannel" />
     
     <int:service-activator
-    	input-channel="clonner"
+    	input-channel="validMessageChannel"
     	ref="monitorRefresher"
     	method="updateMOnitor"
     />
+
+    <int:transformer
+            input-channel="validMessageChannel"
+            expression="payload.author + ' @ ' + payload.updatedDate + ' @ ' + payload.titleEx.value + ' @ ' + payload.link + '#{systemProperties['line.separator']}'"
+            output-channel="transformedChannel"/>
+            
+            
+    <int:channel id="transformedChannel" />
+            
+    <int-stream:stdout-channel-adapter id="stdout" append-newline="false" channel="transformedChannel" />
+    
+    
     <bean id="pwdFetcher" class="com.rometools.fetcher.impl.HttpClientFeedFetcher">
     	<property name="credentialSupplier" ref="gtiCredentialSupplier">
     	</property>
@@ -49,7 +52,43 @@
     
   
     <bean id="currentDate" class="java.util.Date" />
-    <bean id="gtiCredentialSupplier" class="com.gratex.rssreader.blog.GtiCreadentialSupplier" />    
+    <bean id="gtiCredentialSupplier" class="com.gratex.rssreader.blog.GtiCreadentialSupplier" />
     
-    <bean id="monitorRefresher" class="com.gratex.rssreader.blog.monitoring.MonitorRefresher" />
+    <!--  JMX MONITORING -->
+    <bean id="monitor" class="com.gratex.rssreader.blog.monitoring.CommitsMonitor" />
+    <bean id="monitorRefresher" class="com.gratex.rssreader.blog.monitoring.MonitorRefresher">
+    	<property name="commitsMonitor" ref="monitor" />
+    </bean>
+    
+    <context:mbean-export/>
+	<context:mbean-server/>
+	
+	<!-- Exporting beans to JMX -->
+	<bean id="exporter" class="org.springframework.jmx.export.MBeanExporter" 
+		lazy-init="false">
+		<property name="assembler" ref="assembler"/>
+        <property name="namingStrategy" ref="namingStrategy"/>
+    	<property name="beans">
+      		<map>
+        		<entry key="bean:name=testBean1" value-ref="monitor"/>
+      		</map>
+    	</property>
+  </bean>
+  
+  <!-- MBeans attributes taken from annotations -->
+  <bean id="jmxAttributeSource"
+          class="org.springframework.jmx.export.annotation.AnnotationJmxAttributeSource"/>
+         
+  <!-- will create management interface using annotation metadata -->
+  <bean id="assembler"
+          class="org.springframework.jmx.export.assembler.MetadataMBeanInfoAssembler">
+  	<property name="attributeSource" ref="jmxAttributeSource"/>
+  </bean>
+
+    <!-- will pick up the ObjectName from the annotation -->
+    <bean id="namingStrategy"
+          class="org.springframework.jmx.export.naming.MetadataNamingStrategy">
+        <property name="attributeSource" ref="jmxAttributeSource"/>
+    </bean>
+    
 </beans>

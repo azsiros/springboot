@@ -1,16 +1,18 @@
 package com.gratex.rssreader.blog.monitoring;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.rometools.rome.feed.synd.SyndEntry;
 
 public class MonitorRefresher {
 
-	@Autowired
 	private CommitsMonitor commitsMonitor;
 	
 	public void updateMOnitor(SyndEntry feedEntry) {
-		
-		System.out.println("monitor is null: " + (this.commitsMonitor == null));
+		System.err.println(feedEntry.getAuthor());
+		this.commitsMonitor.incrementCommitsCount();
+		System.err.println("monitor count: " + (this.commitsMonitor.getCommitsCount()));
+	}
+	
+	public void setCommitsMonitor(CommitsMonitor commitsMonitor) {
+		this.commitsMonitor = commitsMonitor;
 	}
 }
