@@ -9,10 +9,16 @@ public class MonitorRefresher {
 	public void updateMOnitor(SyndEntry feedEntry) {
 		System.err.println(feedEntry.getAuthor());
 		this.commitsMonitor.incrementCommitsCount();
-		System.err.println("monitor count: " + (this.commitsMonitor.getCommitsCount()));
+		this.commitsMonitor.setLastCommitDate(feedEntry.getPublishedDate());
 	}
 	
 	public void setCommitsMonitor(CommitsMonitor commitsMonitor) {
 		this.commitsMonitor = commitsMonitor;
 	}
+	
+	public void processNotifification(Object notif) {
+		System.err.println(notif);
+	}
+	
+	
 }
